@@ -10,6 +10,7 @@
 - [Требования безопасности (SECURITY_REQUIREMENTS.md)](https://github.com/vputt/rbpo_pvkg/blob/main/SECURITY_REQUIREMENTS.md) - защитные свойства и критерии приёмки.
 - [Модель угроз (THREAT-MODEL.md)](https://github.com/vputt/rbpo_pvkg/blob/main/THREAT-MODEL.md) - потоки данных, границы доверия, угрозы и приоритеты.
 - [Проектные решения безопасности (DESIGN-CASE.md)](https://github.com/vputt/rbpo_pvkg/blob/main/DESIGN-CASE.md) - выбранные способы защиты и планы проверок.
+- [Обзор концепции безопасности (SECURITY-OVERVIEW.md)](SECURITY-OVERVIEW.md) - сценарии, граница доверия и связи угроз, требований и решений на одной странице.
 - [Вклад участников (CONTRIBUTIONS.md)](https://github.com/vputt/rbpo_pvkg/blob/main/CONTRIBUTIONS.md) - конкретные результаты M1 и M2.
 - [Декларация использования ИИ (AI_USAGE.md)](https://github.com/vputt/rbpo_pvkg/blob/main/AI_USAGE.md)
 
