@@ -1,20 +1,46 @@
 package httpapi
 
 import (
+	"context"
 	"io"
 	"net/http"
+	"time"
 )
+
+const readinessTimeout = 2 * time.Second
+
+type ReadinessChecker interface {
+	Ping(context.Context) error
+}
 
 type ItemHandlers struct {
 	Create http.HandlerFunc
 	List   http.HandlerFunc
 }
 
-func NewRouter(items *ItemHandlers) *http.ServeMux {
+func NewRouter(items *ItemHandlers, readiness ReadinessChecker) *http.ServeMux {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		io.WriteString(w, "{\"status\":\"ok\"}")
+	})
+	router.HandleFunc("GET /ready", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if readiness == nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			io.WriteString(w, "{\"status\":\"unavailable\"}")
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(r.Context(), readinessTimeout)
+		defer cancel()
+		if err := readiness.Ping(ctx); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			io.WriteString(w, "{\"status\":\"unavailable\"}")
+			return
+		}
+
+		io.WriteString(w, "{\"status\":\"ready\"}")
 	})
 	if items != nil {
 		if items.Create != nil {

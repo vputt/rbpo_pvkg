@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const testDSN = "postgres://pvkg:pvkg_local_password@localhost:5432/pvkg?sslmode=disable"
+const testDSN = "postgres://pvkg:pvkg_local_password@localhost:55432/pvkg?sslmode=disable"
 
 // Задаёт все переменные пакета, чтобы тесты не зависели от окружения машины:
 // отсутствующий в values ключ получает пустую строку, то есть считается незаданным.
