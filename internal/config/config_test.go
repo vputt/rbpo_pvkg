@@ -9,8 +9,8 @@ import (
 
 const testDSN = "postgres://pvkg:pvkg_local_password@localhost:5432/pvkg?sslmode=disable"
 
-// setEnv задаёт все переменные пакета, чтобы тест не зависел от окружения машины.
-// Отсутствующий в values ключ задаётся пустой строкой, то есть считается незаданным.
+// Задаёт все переменные пакета, чтобы тесты не зависели от окружения машины:
+// отсутствующий в values ключ получает пустую строку, то есть считается незаданным.
 func setEnv(t *testing.T, values map[string]string) {
 	t.Helper()
 	for _, name := range []string{EnvAddr, EnvDBDSN, EnvSessionTTL, EnvLoginMaxFails, EnvLoginLockFor} {
@@ -109,7 +109,6 @@ func TestLoadRejectsBadValues(t *testing.T) {
 	}
 }
 
-// DSN содержит пароль, поэтому он не должен попадать в сообщения об ошибках.
 func TestLoadErrorsDoNotContainDSN(t *testing.T) {
 	setEnv(t, map[string]string{EnvDBDSN: testDSN, EnvSessionTTL: "позже"})
 

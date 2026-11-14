@@ -1,5 +1,4 @@
 // Пакет config читает настройки приложения из переменных окружения.
-// Значений настроек в коде и в репозитории нет; пример набора - .env.example.
 package config
 
 import (
@@ -10,7 +9,6 @@ import (
 	"time"
 )
 
-// Имена переменных окружения.
 const (
 	EnvAddr          = "PVKG_ADDR"
 	EnvDBDSN         = "PVKG_DB_DSN"
@@ -19,8 +17,7 @@ const (
 	EnvLoginLockFor  = "PVKG_LOGIN_LOCK_FOR"
 )
 
-// Значения по умолчанию взяты из документов проекта:
-// срок сессии - решение D-01, порог попыток и срок блокировки - требование SR-09.
+// Срок сессии взят из D-01, порог попыток и срок блокировки - из SR-09.
 const (
 	DefaultAddr          = "localhost:8080"
 	DefaultSessionTTL    = 8 * time.Hour
@@ -28,32 +25,22 @@ const (
 	DefaultLoginLockFor  = 15 * time.Minute
 )
 
-// ErrMissingDBDSN возвращается, когда не задана обязательная настройка PVKG_DB_DSN.
 var ErrMissingDBDSN = fmt.Errorf(
 	"не задана обязательная переменная окружения %s - строка подключения к PostgreSQL; пример набора настроек в .env.example",
 	EnvDBDSN,
 )
 
-// Config - настройки одного запуска приложения.
 type Config struct {
-	// Addr - адрес, на котором слушает HTTP API.
 	Addr string
-	// DBDSN - строка подключения к PostgreSQL.
-	// Содержит пароль: не печатать в журнал и не включать в ответы API.
-	DBDSN string
-	// SessionTTL - срок жизни серверной сессии (D-01).
-	SessionTTL time.Duration
-	// LoginMaxFails - число неудачных попыток входа до блокировки (SR-09).
+	// DBDSN содержит пароль: не печатать в журнал, в ответы API и в сообщения об ошибках.
+	DBDSN         string
+	SessionTTL    time.Duration
 	LoginMaxFails int
-	// LoginLockFor - срок блокировки после превышения порога попыток (SR-09).
-	LoginLockFor time.Duration
+	LoginLockFor  time.Duration
 }
 
-// Load читает настройки из окружения.
-// Необязательные настройки, которые не заданы или заданы пустой строкой,
-// получают значения по умолчанию. Если не задана PVKG_DB_DSN или значение
-// какой-либо переменной нельзя разобрать, возвращается ошибка с именем
-// переменной; значение DSN в текст ошибки не попадает.
+// Load читает настройки из окружения. Незаданная или пустая переменная получает
+// значение по умолчанию; обязательна только PVKG_DB_DSN.
 func Load() (Config, error) {
 	cfg := Config{
 		Addr:          DefaultAddr,
@@ -93,8 +80,6 @@ func Load() (Config, error) {
 	return cfg, nil
 }
 
-// lookup возвращает значение переменной окружения без крайних пробелов.
-// Незаданная переменная и переменная с пустым значением равнозначны: ok = false.
 func lookup(name string) (string, bool) {
 	value := strings.TrimSpace(os.Getenv(name))
 	if value == "" {
@@ -103,7 +88,6 @@ func lookup(name string) (string, bool) {
 	return value, true
 }
 
-// duration читает длительность вида 8h, 30m, 15m30s.
 func duration(name string, fallback time.Duration) (time.Duration, error) {
 	raw, ok := lookup(name)
 	if !ok {
@@ -119,7 +103,6 @@ func duration(name string, fallback time.Duration) (time.Duration, error) {
 	return value, nil
 }
 
-// count читает целое число больше нуля.
 func count(name string, fallback int) (int, error) {
 	raw, ok := lookup(name)
 	if !ok {
