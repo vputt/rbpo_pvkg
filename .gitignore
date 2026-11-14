@@ -1,0 +1,38 @@
+# Собранные бинарники
+/server
+/server.exe
+cmd/server/server
+cmd/server/server.exe
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Локальные настройки окружения с настоящими значениями.
+# Пример набора (.env.example) в репозитории нужен.
+.env
+.env.local
+!.env.example
+
+# Результаты тестов и покрытия
+*.test
+coverage.out
+coverage.html
+
+# Локальные каталоги редакторов и IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Временные и системные файлы
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
+*.orig
+tmp/
+
+# Отчёты сканеров и сохранённые результаты проверок из docs/checks/
+# не игнорируются: они нужны как свидетельства проверок.
+!docs/checks/**

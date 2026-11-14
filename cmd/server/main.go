@@ -4,14 +4,18 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/vputt/rbpo_pvkg/internal/config"
 	"github.com/vputt/rbpo_pvkg/internal/httpapi"
 )
 
 func main() {
-	const address = "localhost:8080"
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("настройки приложения: %v", err)
+	}
 	router := httpapi.NewRouter(nil)
-	log.Printf("HTTP API: %s", address)
-	if err := http.ListenAndServe(address, router); err != nil {
+	log.Printf("HTTP API: %s", cfg.Addr)
+	if err := http.ListenAndServe(cfg.Addr, router); err != nil {
 		log.Fatal(err)
 	}
 }
