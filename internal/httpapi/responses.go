@@ -10,6 +10,7 @@ import (
 const (
 	codeInvalidRequest     = "invalid_request"
 	codeInvalidCredentials = "invalid_credentials"
+	codeTooManyAttempts    = "too_many_attempts"
 	codeInternalError      = "internal_error"
 )
 

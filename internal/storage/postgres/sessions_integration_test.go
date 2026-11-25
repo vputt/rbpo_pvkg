@@ -9,9 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/vputt/rbpo_pvkg/internal/domain"
 	"github.com/vputt/rbpo_pvkg/internal/service"
-	"github.com/vputt/rbpo_pvkg/internal/storage/postgres"
 )
 
 const sessionTTL = 8 * time.Hour
@@ -21,18 +19,9 @@ const sessionTTL = 8 * time.Hour
 func TestLoginStoresOnlyTokenHash(t *testing.T) {
 	pool := prepareDatabase(t)
 	ctx := context.Background()
-	users := postgres.NewUserStore(pool)
+	user := createTrainingUser(t, pool)
 
-	user, err := service.NewUsers(users).Create(ctx, "demo-user", trainingPassword, domain.RoleUser)
-	if err != nil {
-		t.Fatalf("create training user: %v", err)
-	}
-	auth, err := service.NewAuth(users, postgres.NewSessionStore(pool), sessionTTL)
-	if err != nil {
-		t.Fatalf("create auth service: %v", err)
-	}
-
-	result, err := auth.Login(ctx, "demo-user", trainingPassword)
+	result, err := newAuthService(t, pool).Login(ctx, "demo-user", trainingPassword)
 	if err != nil {
 		t.Fatalf("login with the correct password: %v", err)
 	}
@@ -80,15 +69,8 @@ func TestLoginStoresOnlyTokenHash(t *testing.T) {
 func TestLoginRefusesInvalidCredentials(t *testing.T) {
 	pool := prepareDatabase(t)
 	ctx := context.Background()
-	users := postgres.NewUserStore(pool)
-
-	if _, err := service.NewUsers(users).Create(ctx, "demo-user", trainingPassword, domain.RoleUser); err != nil {
-		t.Fatalf("create training user: %v", err)
-	}
-	auth, err := service.NewAuth(users, postgres.NewSessionStore(pool), sessionTTL)
-	if err != nil {
-		t.Fatalf("create auth service: %v", err)
-	}
+	createTrainingUser(t, pool)
+	auth := newAuthService(t, pool)
 
 	start := time.Now()
 	if _, err := auth.Login(ctx, "demo-user", trainingPassword+"!"); !errors.Is(err, service.ErrInvalidCredentials) {
@@ -102,11 +84,7 @@ func TestLoginRefusesInvalidCredentials(t *testing.T) {
 	}
 	unknownLogin := time.Since(start)
 
-	var sessions int
-	if err := pool.QueryRow(ctx, `SELECT count(*) FROM sessions`).Scan(&sessions); err != nil {
-		t.Fatalf("count sessions: %v", err)
-	}
-	if sessions != 0 {
+	if sessions := sessionCount(t, pool); sessions != 0 {
 		t.Fatalf("session count = %d, want 0 after refused logins", sessions)
 	}
 

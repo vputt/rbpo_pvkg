@@ -65,6 +65,25 @@ func (s *UserStore) ByLogin(ctx context.Context, login string) (domain.User, err
 	return user, nil
 }
 
+func (s *UserStore) ByLoginForUpdate(ctx context.Context, login string) (domain.User, time.Time, error) {
+	var user domain.User
+	var now time.Time
+	err := s.db.QueryRow(ctx, `
+		SELECT id, login, password_hash, role, failed_login_count, locked_until, CURRENT_TIMESTAMP
+		FROM users
+		WHERE login = $1
+		FOR UPDATE
+	`, login).
+		Scan(&user.ID, &user.Login, &user.PasswordHash, &user.Role, &user.FailedLoginCount, &user.LockedUntil, &now)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return domain.User{}, time.Time{}, domain.ErrUserNotFound
+	}
+	if err != nil {
+		return domain.User{}, time.Time{}, fmt.Errorf("чтение пользователя под блокировкой строки: %w", err)
+	}
+	return user, now, nil
+}
+
 func (s *UserStore) IncrementLoginFailures(ctx context.Context, userID int64) (int, error) {
 	var count int
 	err := s.db.QueryRow(ctx, `

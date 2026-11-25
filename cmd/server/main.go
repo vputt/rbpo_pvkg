@@ -42,8 +42,11 @@ func run() error {
 	}
 	defer pool.Close()
 
-	users := postgres.NewUserStore(pool)
-	auth, err := service.NewAuth(users, postgres.NewSessionStore(pool), cfg.SessionTTL)
+	auth, err := service.NewAuth(postgres.NewTransactionRunner(pool), service.AuthSettings{
+		SessionTTL:    cfg.SessionTTL,
+		LoginMaxFails: cfg.LoginMaxFails,
+		LoginLockFor:  cfg.LoginLockFor,
+	})
 	if err != nil {
 		return err
 	}

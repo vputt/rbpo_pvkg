@@ -112,6 +112,23 @@ func TestLoginAnswersTheSameWayOnInvalidCredentials(t *testing.T) {
 	}
 }
 
+func TestLoginAnswersTooManyRequestsWhileLocked(t *testing.T) {
+	auth := &authStub{err: service.ErrLoginLocked}
+
+	response := login(t, auth, `{"login":"demo-user","password":"training-password-0001"}`)
+
+	if response.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusTooManyRequests)
+	}
+	want := `{"error":{"code":"too_many_attempts","message":"слишком много неудачных попыток входа, попробуйте позже"}}`
+	if body := response.Body.String(); body != want {
+		t.Fatalf("body = %q, want %q", body, want)
+	}
+	if strings.Contains(response.Body.String(), "token") {
+		t.Fatal("a locked account must not receive a token")
+	}
+}
+
 func TestLoginHidesInternalError(t *testing.T) {
 	auth := &authStub{err: errors.New(`ERROR: relation "sessions" does not exist (SQLSTATE 42P01)`)}
 

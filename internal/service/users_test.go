@@ -40,6 +40,11 @@ func (r *repositoryStub) ByLogin(ctx context.Context, login string) (domain.User
 	return domain.User{}, domain.ErrUserNotFound
 }
 
+func (r *repositoryStub) ByLoginForUpdate(ctx context.Context, login string) (domain.User, time.Time, error) {
+	user, err := r.ByLogin(ctx, login)
+	return user, time.Now(), err
+}
+
 func (r *repositoryStub) IncrementLoginFailures(ctx context.Context, userID int64) (int, error) {
 	return 0, nil
 }

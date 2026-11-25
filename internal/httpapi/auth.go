@@ -53,6 +53,9 @@ func loginHandler(auth Authenticator) http.HandlerFunc {
 		case errors.Is(err, service.ErrInvalidCredentials):
 			writeError(w, http.StatusUnauthorized, codeInvalidCredentials, "неверный логин или пароль")
 			return
+		case errors.Is(err, service.ErrLoginLocked):
+			writeError(w, http.StatusTooManyRequests, codeTooManyAttempts, "слишком много неудачных попыток входа, попробуйте позже")
+			return
 		case err != nil:
 			log.Printf("вход: %v", err)
 			writeError(w, http.StatusInternalServerError, codeInternalError, messageInternalError)
