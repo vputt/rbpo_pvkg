@@ -14,6 +14,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vputt/rbpo_pvkg/internal/config"
 	"github.com/vputt/rbpo_pvkg/internal/httpapi"
+	"github.com/vputt/rbpo_pvkg/internal/service"
+	"github.com/vputt/rbpo_pvkg/internal/storage/postgres"
 )
 
 const shutdownTimeout = 5 * time.Second
@@ -40,7 +42,20 @@ func run() error {
 	}
 	defer pool.Close()
 
-	router := httpapi.NewRouter(nil, pool)
+	auth, err := service.NewAuth(postgres.NewTransactionRunner(pool), service.AuthSettings{
+		SessionTTL:    cfg.SessionTTL,
+		LoginMaxFails: cfg.LoginMaxFails,
+		LoginLockFor:  cfg.LoginLockFor,
+	})
+	if err != nil {
+		return err
+	}
+
+	router := httpapi.NewRouter(httpapi.Dependencies{
+		Auth:      httpapi.NewAuthHandlers(auth),
+		Identify:  service.NewSessions(postgres.NewSessionStore(pool)),
+		Readiness: pool,
+	})
 	server := &http.Server{
 		Addr:    cfg.Addr,
 		Handler: router,
