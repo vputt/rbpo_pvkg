@@ -18,7 +18,7 @@ type ItemHandlers struct {
 	List   http.HandlerFunc
 }
 
-func NewRouter(items *ItemHandlers, readiness ReadinessChecker) *http.ServeMux {
+func NewRouter(items *ItemHandlers, auth *AuthHandlers, readiness ReadinessChecker) *http.ServeMux {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -42,6 +42,9 @@ func NewRouter(items *ItemHandlers, readiness ReadinessChecker) *http.ServeMux {
 
 		io.WriteString(w, "{\"status\":\"ready\"}")
 	})
+	if auth != nil && auth.Login != nil {
+		router.HandleFunc("POST /api/auth/login", auth.Login)
+	}
 	if items != nil {
 		if items.Create != nil {
 			router.HandleFunc("POST /api/items", items.Create)

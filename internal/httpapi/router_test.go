@@ -51,7 +51,7 @@ func TestReady(t *testing.T) {
 			request := httptest.NewRequest(http.MethodGet, "/ready", nil)
 			response := httptest.NewRecorder()
 
-			NewRouter(nil, tt.checker).ServeHTTP(response, request)
+			NewRouter(nil, nil, tt.checker).ServeHTTP(response, request)
 
 			if response.Code != tt.wantStatus {
 				t.Fatalf("status = %d, want %d", response.Code, tt.wantStatus)
@@ -75,7 +75,7 @@ func TestHealthDoesNotPingDatabase(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "/health", nil)
 	response := httptest.NewRecorder()
 
-	NewRouter(nil, checker).ServeHTTP(response, request)
+	NewRouter(nil, nil, checker).ServeHTTP(response, request)
 
 	if response.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusOK)
