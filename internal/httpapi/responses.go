@@ -11,10 +11,14 @@ const (
 	codeInvalidRequest     = "invalid_request"
 	codeInvalidCredentials = "invalid_credentials"
 	codeTooManyAttempts    = "too_many_attempts"
+	codeUnauthorized       = "unauthorized"
 	codeInternalError      = "internal_error"
 )
 
-const messageInternalError = "внутренняя ошибка"
+const (
+	messageInternalError = "внутренняя ошибка"
+	messageUnauthorized  = "требуется действующий токен сессии"
+)
 
 type errorEnvelope struct {
 	Error errorDetails `json:"error"`

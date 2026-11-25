@@ -51,7 +51,11 @@ func run() error {
 		return err
 	}
 
-	router := httpapi.NewRouter(nil, httpapi.NewAuthHandlers(auth), pool)
+	router := httpapi.NewRouter(httpapi.Dependencies{
+		Auth:      httpapi.NewAuthHandlers(auth),
+		Identify:  service.NewSessions(postgres.NewSessionStore(pool)),
+		Readiness: pool,
+	})
 	server := &http.Server{
 		Addr:    cfg.Addr,
 		Handler: router,

@@ -18,7 +18,17 @@ type ItemHandlers struct {
 	List   http.HandlerFunc
 }
 
-func NewRouter(items *ItemHandlers, auth *AuthHandlers, readiness ReadinessChecker) *http.ServeMux {
+// Dependencies - то, что роутер раздаёт по маршрутам. Защищённые маршруты оборачиваются
+// проверкой сессии здесь, а не у обработчиков: иначе её легко забыть у нового маршрута.
+// Без Identify защищённые маршруты не регистрируются вовсе - открытыми они не становятся.
+type Dependencies struct {
+	Auth      *AuthHandlers
+	Items     *ItemHandlers
+	Identify  Identifier
+	Readiness ReadinessChecker
+}
+
+func NewRouter(deps Dependencies) *http.ServeMux {
 	router := http.NewServeMux()
 	router.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -26,7 +36,7 @@ func NewRouter(items *ItemHandlers, auth *AuthHandlers, readiness ReadinessCheck
 	})
 	router.HandleFunc("GET /ready", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if readiness == nil {
+		if deps.Readiness == nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			io.WriteString(w, "{\"status\":\"unavailable\"}")
 			return
@@ -34,7 +44,7 @@ func NewRouter(items *ItemHandlers, auth *AuthHandlers, readiness ReadinessCheck
 
 		ctx, cancel := context.WithTimeout(r.Context(), readinessTimeout)
 		defer cancel()
-		if err := readiness.Ping(ctx); err != nil {
+		if err := deps.Readiness.Ping(ctx); err != nil {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			io.WriteString(w, "{\"status\":\"unavailable\"}")
 			return
@@ -42,15 +52,16 @@ func NewRouter(items *ItemHandlers, auth *AuthHandlers, readiness ReadinessCheck
 
 		io.WriteString(w, "{\"status\":\"ready\"}")
 	})
-	if auth != nil && auth.Login != nil {
-		router.HandleFunc("POST /api/auth/login", auth.Login)
+	if deps.Auth != nil && deps.Auth.Login != nil {
+		router.HandleFunc("POST /api/auth/login", deps.Auth.Login)
 	}
-	if items != nil {
-		if items.Create != nil {
-			router.HandleFunc("POST /api/items", items.Create)
+	if deps.Items != nil && deps.Identify != nil {
+		authenticated := Authenticate(deps.Identify)
+		if deps.Items.Create != nil {
+			router.Handle("POST /api/items", authenticated(deps.Items.Create))
 		}
-		if items.List != nil {
-			router.HandleFunc("GET /api/items", items.List)
+		if deps.Items.List != nil {
+			router.Handle("GET /api/items", authenticated(deps.Items.List))
 		}
 	}
 	return router

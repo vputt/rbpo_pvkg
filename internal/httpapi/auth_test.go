@@ -32,7 +32,7 @@ func login(t *testing.T, auth Authenticator, body string) *httptest.ResponseReco
 	t.Helper()
 	request := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(body))
 	response := httptest.NewRecorder()
-	NewRouter(nil, NewAuthHandlers(auth), nil).ServeHTTP(response, request)
+	NewRouter(Dependencies{Auth: NewAuthHandlers(auth)}).ServeHTTP(response, request)
 	return response
 }
 
@@ -150,7 +150,7 @@ func TestLoginRouteIsAbsentWithoutHandlers(t *testing.T) {
 	request := httptest.NewRequest(http.MethodPost, "/api/auth/login", strings.NewReader(`{}`))
 	response := httptest.NewRecorder()
 
-	NewRouter(nil, nil, nil).ServeHTTP(response, request)
+	NewRouter(Dependencies{}).ServeHTTP(response, request)
 
 	if response.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusNotFound)
